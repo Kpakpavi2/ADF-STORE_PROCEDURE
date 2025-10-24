@@ -1,0 +1,383 @@
+{
+    "name": "METADATA_INSERT_WITH_SP",
+    "properties": {
+        "activities": [
+            {
+                "name": "COPY DATA FROM BLOB",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "TRUNCATE",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobStorageReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "AzureSqlSink",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false,
+                        "disableMetricsCollection": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "mappings": [
+                            {
+                                "source": {
+                                    "name": "Make",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Make",
+                                    "type": "String",
+                                    "physicalType": "varchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Model",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Model",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Type",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Type",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Origin",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Origin",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "DriveTrain",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "DriveTrain",
+                                    "type": "String",
+                                    "physicalType": "nvarchar"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Length",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Length",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            },
+                            {
+                                "source": {
+                                    "name": "Mileage",
+                                    "type": "String",
+                                    "physicalType": "String"
+                                },
+                                "sink": {
+                                    "name": "Mileage",
+                                    "type": "Int32",
+                                    "physicalType": "int"
+                                }
+                            }
+                        ],
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "PAR_BLOB",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "FileName": {
+                                "value": "@pipeline().parameters.FileName",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "DS_SQL",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "TableName": {
+                                "value": "@pipeline().parameters.TableName",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "ON SUCCESS SP",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "COPY DATA FROM BLOB",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_adfpipelinelogs]",
+                    "storedProcedureParameters": {
+                        "adfName": {
+                            "value": {
+                                "value": "@pipeline().DataFactory",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "errorCode": {
+                            "value": null,
+                            "type": "String"
+                        },
+                        "errorDescription": {
+                            "value": null,
+                            "type": "String"
+                        },
+                        "executionStatus": {
+                            "value": {
+                                "value": "@activity('COPY DATA FROM BLOB').output.executionDetails[0].status",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "pipelineName": {
+                            "value": {
+                                "value": "@pipeline().Pipeline",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "runId": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "triggerName": {
+                            "value": {
+                                "value": "@pipeline().TriggerName",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "triggerTime": {
+                            "value": {
+                                "value": "@pipeline().TriggerTime",
+                                "type": "Expression"
+                            },
+                            "type": "DateTime"
+                        },
+                        "triggerType": {
+                            "value": {
+                                "value": "@pipeline().TriggerType",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedServiceName": {
+                    "referenceName": "AzureSqlDatabase1",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "ON FAILURE SP",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "COPY DATA FROM BLOB",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_adfpipelinelogs]",
+                    "storedProcedureParameters": {
+                        "adfName": {
+                            "value": {
+                                "value": "@pipeline().DataFactory",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "errorCode": {
+                            "value": {
+                                "value": "@activity('COPY DATA FROM BLOB').output.errors[0].code",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "errorDescription": {
+                            "value": {
+                                "value": "@activity('COPY DATA FROM BLOB').output.errors[0].message",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "executionStatus": {
+                            "value": {
+                                "value": "@activity('COPY DATA FROM BLOB').output.executionDetails[0].status",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "pipelineName": {
+                            "value": {
+                                "value": "@pipeline().Pipeline",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "runId": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "triggerName": {
+                            "value": {
+                                "value": "@pipeline().TriggerName",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "triggerTime": {
+                            "value": {
+                                "value": "@pipeline().TriggerTime",
+                                "type": "Expression"
+                            },
+                            "type": "DateTime"
+                        },
+                        "triggerType": {
+                            "value": {
+                                "value": "@pipeline().TriggerType",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedServiceName": {
+                    "referenceName": "AzureSqlDatabase1",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "TRUNCATE",
+                "type": "Script",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "linkedServiceName": {
+                    "referenceName": "PAR_LS_SQL",
+                    "type": "LinkedServiceReference"
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": {
+                                "value": "@concat('TRUNCATE TABLE ', pipeline().parameters.TableName)\n",
+                                "type": "Expression"
+                            }
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            }
+        ],
+        "parameters": {
+            "TableName": {
+                "type": "string"
+            },
+            "FileName": {
+                "type": "string"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2025-10-17T04:52:13Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
