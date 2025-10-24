@@ -1,0 +1,29 @@
+Script task: @concat('TRUNCATE TABLE ', pipeline().parameters.TableName)
+
+FileName: @pipeline().parameters.FileName
+
+TableName: @pipeline().parameters.TableName
+
+--=======================================================================================
+
+STORED PROCEDURE:
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+create proc [dbo].[usp_adfpipelinelogs](
+@adfName varchar(50),
+@pipelineName varchar(50),
+@triggerName varchar(50),
+@triggerType varchar(50),
+@triggerTime DateTime,
+@runId varchar(50),
+@executionStatus varchar(50),
+@errorCode varchar(50),
+@errorDescription varchar(500)
+) as begin
+insert into pipelineExecutions values(@adfName,@pipelineName,@triggerName,@triggerType,@triggerTime,
+@runId,@executionStatus,@errorCode,@errorDescription) 
+end
+GO
